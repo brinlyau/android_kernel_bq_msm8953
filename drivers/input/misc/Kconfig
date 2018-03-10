@@ -792,6 +792,11 @@ config FINGERPRINT_SUNWAVE_FINGER
 	help
 	  Say Y here to enable SUNWAVE_FINGER fingerprint driver support
 
+config HALL
+	tristate "HALL Switch"
+	help
+	 If you say yes here, you get support for hall switch control device
+
 source "drivers/input/misc/ots_pat9125/Kconfig"
 
 config SENSORS_LTR553
