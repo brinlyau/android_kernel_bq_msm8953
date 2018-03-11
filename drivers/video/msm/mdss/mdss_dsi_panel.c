@@ -35,6 +35,9 @@
 
 DEFINE_LED_TRIGGER(bl_led_trigger);
 
+extern int ilitek_i2c_resume_test(void);
+extern void send_ilitek_TP_suspend_scnd_cmd(void);
+extern int ilitek_gesture_enable;
 void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 {
 	if (ctrl->pwm_pmi)
@@ -345,6 +348,10 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 	struct mdss_panel_info *pinfo = NULL;
 	int i, rc = 0;
 
+       if(enable == 1)
+       {
+            ilitek_i2c_resume_test();
+        }
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return -EINVAL;
@@ -480,7 +487,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			gpio_set_value((ctrl_pdata->disp_en_gpio), 0);
 			gpio_free(ctrl_pdata->disp_en_gpio);
 		}
-		gpio_set_value((ctrl_pdata->rst_gpio), 0);
+		gpio_set_value((ctrl_pdata->rst_gpio), 1);
 		gpio_free(ctrl_pdata->rst_gpio);
 		if (gpio_is_valid(ctrl_pdata->mode_gpio))
 			gpio_free(ctrl_pdata->mode_gpio);
@@ -975,6 +982,11 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return -EINVAL;
+	}
+
+	if(ilitek_gesture_enable == 1)
+	{
+		send_ilitek_TP_suspend_scnd_cmd();	
 	}
 
 	pinfo = &pdata->panel_info;
@@ -2223,9 +2235,17 @@ int mdss_panel_parse_bl_settings(struct device_node *np,
 	const char *data;
 	int rc = 0;
 	u32 tmp;
+	int gpio_127,gpio_128;
+
+	gpio_127 = gpio_get_value(127);
+	gpio_128 = gpio_get_value(128);
 
 	ctrl_pdata->bklt_ctrl = UNKNOWN_CTRL;
+	if ((0 == gpio_127) && (1 == gpio_128))
 	data = of_get_property(np, "qcom,mdss-dsi-bl-pmic-control-type", NULL);
+	else
+	data = of_get_property(np, "qcom,mdss-dsi-bl-pmic-control-type-dcs", NULL);
+
 	if (data) {
 		if (!strcmp(data, "bl_ctrl_wled")) {
 			led_trigger_register_simple("bkl-trigger",
