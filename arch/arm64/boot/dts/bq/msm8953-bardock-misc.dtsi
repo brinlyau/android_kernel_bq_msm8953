@@ -1,0 +1,175 @@
+&i2c_3 { /* BLSP1 QUP3 */
+	ktd@30 { /* Breath Light-Driven */
+	        compatible = "ktd,ktd2026";
+		reg = <0x30>;
+		//vdd_ana-supply = <&vdd_vreg>;
+		vdd-supply = <&pm8953_l10>;
+		vcc_i2c-supply = <&pm8953_l6>;
+		ktd,ledr-parameter_array = <255 12 500 12 500 0 0>;
+		ktd,ledg-parameter_array = <255 12 500 12 500 0 0>;
+		ktd,ledb-parameter_array = <255 12 500 12 500 0 0>;
+	};
+};
+
+&soc {
+	hall_switch {
+		compatible = "hall-switch,ah1887";
+		pinctrl-names = "hall_active","hall_suspend";
+		pinctrl-0 = <&hall_int_active>;
+		pinctrl-1 = <&hall_int_suspend>;
+		vdd-io-supply = <&pm8953_l5>;
+		interrupt-names = "hall_irq";
+		// hall,irq-gpio = <&msm_gpio 13 0x00>;
+		hall,irq-gpio = <&tlmm 13 0x2008>;
+	};
+};
+
+&tlmm {
+	hall_int_pin {
+		//qcom,pins = <&gp 13>;
+		pins = "gpio13";
+		qcom,pin-func = <0>;
+		qcom,num-grp-pins = <1>;
+		label = "hall_int_pin";
+		hall_int_active: active {
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+		hall_int_suspend: suspend {
+			drive-strength = <6>;
+			bias-pull-up;
+		};
+	};
+};
+
+&i2c_3_active {
+	config {
+		drive-strength = <16>;
+		output-high;
+	};
+};
+
+&i2c_3_sleep {
+	config {
+		drive-strength = <16>;
+		output-high;
+	};
+};
+
+&i2c_5_active {
+	config {
+		output-high;
+	};
+};
+
+&i2c_5_sleep {
+	config {
+		output-high;
+	};
+};
+
+&pri_tlmm_lines_act {
+	mux {
+		pins = "gpio91", "gpio93", "gpio88";
+	};
+	config {
+		pins = "gpio91", "gpio93", "gpio88";
+	};
+};
+
+&pri_tlmm_lines_sus {
+	mux {
+		pins = "gpio91", "gpio93", "gpio88";
+	};
+	config {
+		pins = "gpio91", "gpio93", "gpio88";
+	};
+};
+
+&tlmm {
+	quat-tlmm-lines {
+		quat_tlmm_lines_act {
+			mux {
+				pins = "gpio135", "gpio137";
+				function = "sec_mi2s";
+			};
+
+			config {
+				pins = "gpio135", "gpio137";
+				drive-strength = <0x8>;
+			};
+		};
+
+		quat_tlmm_lines_sus {
+			mux {
+				pins = "gpio135", "gpio137";
+				function = "sec_mi2s";
+			};
+
+			config {
+				pins = "gpio135", "gpio137";
+				drive-strength = <0x2>;
+				bias-pull-down;
+			};
+		};
+	};
+
+	quat-tlmm-ws-lines {
+		quat_tlmm_ws_act {
+			mux {
+				pins = "gpio136";
+				function = "sec_mi2s";
+			};
+
+			config {
+				pins = "gpio136";
+				drive-strength = <0x8>;
+			};
+		};
+
+		quat_tlmm_ws_sus {
+			mux {
+				pins = "gpio136";
+				function = "sec_mi2s";
+			};
+
+			config {
+				pins = "gpio136";
+				drive-strength = <0x2>;
+				bias-pull-down;
+			};
+		};
+	};
+};
+
+&pm8953_vadc {
+	chan@11 {
+		label = "case_therm";
+		reg = <0x11>;
+		qcom,decimation = <0x0>;
+		qcom,pre-div-channel-scaling = <0x0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <0x2>;
+		qcom,hw-settle-time = <0x2>;
+		qcom,fast-avg-setup = <0x0>;
+		qcom,vadc-thermal-node;
+	};
+	chan@13 {
+		label = "sub_board";
+		status = "okay";
+	};
+};
+
+&pmi_haptic {
+	qcom,play-mode = "buffer";
+	qcom,wave-play-rate-us = <4255>;
+	qcom,actuator-type = "lra";
+	qcom,wave-shape = "sine";
+	qcom,ilim-ma = <90>;
+	qcom,sc-deb-cycles = <1>;
+	qcom,brake-pattern = [00 00 00 00];
+	qcom,wave-samples = [7e 7e 7e 7e 7e 7e 7e];
+	qcom,lra-auto-res-mode = "none";
+	qcom,lra-res-cal-period = <1>;
+	qcom,correct-lra-drive-freq;
+};

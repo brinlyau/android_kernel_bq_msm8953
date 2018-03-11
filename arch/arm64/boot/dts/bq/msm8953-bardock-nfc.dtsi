@@ -1,0 +1,22 @@
+&i2c_5 {
+	nq@28 {
+		status = "disabled";
+	};
+	nxp@28 {
+		compatible = "nxp,pn547";
+		reg = <0x28>;
+		qcom,nxp-irq = <0xbe 0x11 0x0>;
+		qcom,nxp-ven = <0xbe 0x10 0x0>;
+		qcom,nxp-dw-req = <0xbe 0x3e 0x0>;
+		qcom,nxp-clkreq = <0xef 0x2 0x0>;
+		interrupt-parent = <0xbe>;
+		qcom,clk-src = "BBCLK2";
+		interrupts = <0x11 0x0>;
+		interrupt-names = "nxp-irq";
+		pinctrl-names = "nfc_active", "nfc_suspend";
+		pinctrl-0 = <0xf0 0xf1>;
+		pinctrl-1 = <0xf2 0xf3>;
+		clocks = <0x37 0x498938e5>;
+		clock-names = "ref_clk";
+	};
+};

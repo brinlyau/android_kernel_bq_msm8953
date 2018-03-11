@@ -1,0 +1,147 @@
+/*
+ * Copyright (c) 2015-2017, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2018, The LineageOS Project. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/dts-v1/;
+
+#include "../qcom/msm8953.dtsi"
+#include "../qcom/msm-pmi8950.dtsi"
+
+/ {
+	model = "Qualcomm Technologies, Inc. MSM8953 QRD SKU3";
+	compatible = "qcom,msm8953-qrd-sku3",
+		   "qcom,msm8953-qrd", "qcom,msm8953", "qcom,qrd";
+	qcom,board-id= <0x2000b 0>;
+
+	aliases {
+		i2c6  = &i2c_6;
+	};
+};
+
+&other_ext_mem {
+	reg = <0x0 0x83300000 0x0 0x3800000>;
+};
+
+&soc {
+	led_flash0: qcom,camera-flash {
+		cell-index = <0>;
+		compatible = "qcom,camera-flash";
+		qcom,flash-type = <1>;
+		qcom,flash-source = <&pmi8950_flash0 &pmi8950_flash1>;
+		qcom,torch-source = <&pmi8950_torch0 &pmi8950_torch1>;
+		qcom,switch-source = <&pmi8950_switch>;
+	};
+};
+
+#include "../qcom/msm8953-qrd-sku3.dtsi"
+#include "msm8953-bardock-audio.dtsi"
+#include "msm8953-bardock-camera.dtsi"
+#include "msm8953-bardock-fingerprint.dtsi"
+#include "msm8953-bardock-misc.dtsi"
+#include "msm8953-bardock-nfc.dtsi"
+#include "msm8953-bardock-panels.dtsi"
+#include "msm8953-bardock-touch.dtsi"
+#include "msm8953-bardock-usb.dtsi"
+
+&usb3 {
+	vbus_dwc3-supply = <&smbcharger_charger_otg>;
+};
+
+&mdss_dsi1 {
+	lab-supply = <&lab_regulator>;
+	ibb-supply = <&ibb_regulator>;
+};
+
+&dsi_panel_pwr_supply {
+	qcom,panel-supply-entry@2 {
+		reg = <2>;
+		qcom,supply-name = "lab";
+		qcom,supply-min-voltage = <4600000>;
+		qcom,supply-max-voltage = <6000000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+	};
+
+	qcom,panel-supply-entry@3 {
+		reg = <3>;
+		qcom,supply-name = "ibb";
+		qcom,supply-min-voltage = <4600000>;
+		qcom,supply-max-voltage = <6000000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+		qcom,supply-post-on-sleep = <10>;
+	};
+};
+
+&qrd_batterydata {
+	qcom,batt-id-range-pct = <30>;
+	#include "batterydata-qrd-jiade-4v4-3075mah.dtsi"
+	#include "batterydata-qrd-feimaotui-4v4-3090mah.dtsi"
+};
+
+&pm8953_pwm {
+	status = "okay";
+};
+
+&spi_3 {
+	status = "disabled";
+};
+
+&i2c_2 {
+	qcom,clk-freq-out = <100000>;
+};
+
+&slim_msm {
+	status = "disabled";
+	msm_dai_slim {
+		status = "disabled";
+	};
+};
+
+&sdhc_2 {
+	cd-gpios = <&tlmm 133 0x0>;
+};
+
+&spmi_bus {
+	qcom,pm8953@0 {
+		qcom,power-on@800 {
+			qcom,pon_1 {
+				qcom,support-reset = <0x1>;
+				qcom,s1-timer = <0x2810>;
+				qcom,s2-timer = <0x7d0>;
+				qcom,s2-type = <0x8>;
+			};
+		};
+	};
+};
+
+&pmi8950_mpps {
+	mpp@a100 {
+		qcom,ain-route = <0x3>;
+	};
+	mpp@a300 {
+		qcom,mode-lcd = <0x1>;
+		qcom,invert-lcd = <0x0>;
+		qcom,master-en-lcd = <0x1>;
+		qcom,src-sel-lcd = <0x5>;
+		qcom,vin-sel-lcd = <0x2>;
+	};
+};
+
+&spmi_bus {
+	qcom,pmi8950@2 {
+		qcom,leds@a100 {
+			status = "disabled";
+		};
+	};
+};

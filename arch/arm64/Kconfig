@@ -360,6 +360,15 @@ config ARCH_MSM8994_V1_TLBI_WA
 	  [39:38] bits of VA are tied to zero and due to which TLBI
 	  operations with VA or ASID will not work.
 
+config MACH_BQ
+	bool "Enable BQ platform"
+	select ARCH_MSM
+
+config BOARD_BARDOCK
+	bool "Enable BQ Bardock board support"
+	select MACH_BQ
+	select ARCH_MSM8953
+
 endmenu
 
 menu "Bus support"

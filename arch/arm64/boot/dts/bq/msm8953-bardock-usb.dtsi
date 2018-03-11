@@ -1,0 +1,57 @@
+&tlmm {
+	usb-temp-pin {
+		pins = "gpio114";
+		qcom,num-grp-pins = <1>;
+		qcom,pin-func = <0>;
+		label = "usb-temp-pin";
+		usb_temp_default: default {
+			drive-strength = <8>;
+			bias-disable;
+		};
+	};
+};
+
+&i2c_2 {
+	smb1351-charger@1d {
+		compatible = "qcom,smb1351-charger";
+		reg = <0x1d>;
+		qcom,parallel-en-pin-polarity = <0x1>;
+		qcom,parallel-charger;
+		qcom,float-voltage-mv = <0x1130>;
+		qcom,recharge-mv = <0x64>;
+	};
+};
+
+&pmi8950_charger {
+	qcom,iterm-ma = <150>;
+	qcom,resume-delta-mv = <100>;
+	qcom,thermal-mitigation = <3000 2500 1950 1400 900 700 0>;
+	qcom,fastchg-current-ma = <0x898>;
+	qcom,charging-timeout-mins = <0x300>;
+	qcom,fastchg-current-comp = <0x4b0>;
+	qcom,float-voltage-comp = <0x10>;
+	qcom,report-temp-by-d-work;
+	qcom,override-usb-current;
+};
+
+&pmi8950_fg {
+	qcom,resume-soc = <97>;
+	qcom,fg-iterm-ma = <180>;
+	qcom,fg-chg-iterm-ma = <150>;
+	qcom,fg-cutoff-voltage-mv = <3400>;
+	qcom,cold-bat-decidegc = <0>;
+	qcom,cool-bat-decidegc = <150>;
+	qcom,warm-bat-decidegc = <450>;
+	qcom,fg-cc-cv-threshold-mv = <0x1126>;
+	qcom,cycle-counter-low-soc = <0xf>;
+	qcom,cycle-counter-high-soc = <0x55>;
+	qcom,cl-max-temp-decidegc = <0x1c2>;
+	qcom,cl-min-temp-decidegc = <0x96>;
+	qcom,cl-max-start-soc = <0x5>;
+	qcom,capacity-learning-feedback;
+	qcom,fg-delta-soc = <0x1>;
+	qcom,fg-vbat-estimate-diff-mv = <0xc8>;
+	qcom,fg-therm-delay-us = <0xbb8>;
+	qcom,cold-hot-jeita-hysteresis = <0x14 0x14>;
+	qcom,ext-sense-type-mp;
+};

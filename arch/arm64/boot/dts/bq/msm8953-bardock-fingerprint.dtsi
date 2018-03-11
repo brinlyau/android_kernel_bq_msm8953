@@ -1,0 +1,69 @@
+&soc {
+	/delete-node/ qseecom@85b00000;
+	qcom_seecom: qseecom@83300000 {
+		compatible = "qcom,qseecom";
+		reg = <0x83300000 0x3000000>;
+		reg-names = "secapp-region";
+		qcom,hlos-num-ce-hw-instances = <1>;
+		qcom,hlos-ce-hw-instance = <0>;
+		qcom,qsee-ce-hw-instance = <0>;
+		qcom,disk-encrypt-pipe-pair = <2>;
+		qcom,support-fde;
+		qcom,msm-bus,name = "qseecom-noc";
+		qcom,msm-bus,num-cases = <4>;
+		qcom,msm-bus,num-paths = <1>;
+		qcom,support-bus-scaling;
+		qcom,msm-bus,vectors-KBps =
+			<55 512 0 0>,
+			<55 512 0 0>,
+			<55 512 120000 1200000>,
+			<55 512 393600 3936000>;
+		clocks = <&clock_gcc clk_crypto_clk_src>,
+			 <&clock_gcc clk_gcc_crypto_clk>,
+			 <&clock_gcc clk_gcc_crypto_ahb_clk>,
+			 <&clock_gcc clk_gcc_crypto_axi_clk>;
+		clock-names = "core_clk_src", "core_clk",
+				"iface_clk", "bus_clk";
+		qcom,ce-opp-freq = <100000000>;
+	};
+
+	goodix_gf3208 {
+		compatible = "goodix,fingerprint";
+		/*spi-max-frequency = <4800000>;
+		reg = <0>;
+		input-device-name = "gf3208";
+		interrupt-parent = <&msm_gpio>;
+		interrupts = <63 0>;
+		spi-qup-id = <11>;*/
+		interrupt-parent = <&tlmm>;
+		interrupts = <48 0x0>;
+
+		vcc_spi-supply  = <&pm8953_l6>;
+		vdd_ana-supply  = <&pm8953_l6>;
+		vdd_io-supply   = <&pm8953_l6>;
+
+		goodix,gpio_reset = <&tlmm 140 0>;
+		goodix,gpio_irq = <&tlmm 48 0>;
+		goodix,gpio_pwr = <&tlmm 35 0>;
+	};
+
+	SUNWAVE_sw9651 {
+		compatible = "qcom,fingerprint";
+		/*spi-max-frequency = <4800000>;
+		reg = <0>;
+		input-device-name = "gf3208";
+		interrupt-parent = <&msm_gpio>;
+		interrupts = <63 0>;
+		spi-qup-id = <11>;*/
+		interrupt-parent = <&tlmm>;
+		interrupts = <48 0x0>;
+
+		vcc_spi-supply  = <&pm8953_l6>;
+		vdd_ana-supply  = <&pm8953_l6>;
+		vdd_io-supply   = <&pm8953_l6>;
+
+		qcom,reset-gpio = <&tlmm 140 0>;
+		qcom,irq-gpio = <&tlmm 48 0>;
+		qcom,pwr-gpio = <&tlmm 35 0>;
+	};
+};
