@@ -1541,7 +1541,6 @@ static int32_t q6asm_srvc_callback(struct apr_client_data *data, void *priv)
 	if ((sid > 0 && sid <= SESSION_MAX))
 		spin_unlock_irqrestore(
 			&(session[sid].session_lock), flags);
-
 	return 0;
 }
 

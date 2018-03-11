@@ -2402,7 +2402,6 @@ static int msm_compr_pointer(struct snd_compr_stream *cstream,
 		return -ENETRESET;
 	}
 	if (cstream->direction == SND_COMPRESS_PLAYBACK) {
-
 		gapless_transition = prtd->gapless_state.gapless_transition;
 		spin_unlock_irqrestore(&prtd->lock, flags);
 		if (gapless_transition)
