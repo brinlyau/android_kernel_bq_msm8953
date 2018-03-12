@@ -126,6 +126,12 @@
 			alignment = <0 0x400000>;
 			size = <0 0x800000>;
 		};
+
+		ramoops_mem: ramoops_region@0 {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x8ee00000 0x0 0x80000>;
+		};
 	};
 
 	aliases {
@@ -179,6 +185,21 @@
 		qcom,apm-halt-clk-delay = <0x11>;
 		qcom,apm-resume-clk-delay = <0x10>;
 		qcom,apm-sel-switch-delay = <0x01>;
+	};
+
+	ramoops {
+		compatible = "ramoops";
+		status = "ok";
+
+		/* This is tacked at the end of wcnss_fw_region@0 */
+		android,ramoops-buffer-start = <0x8ee00000>;
+		android,ramoops-buffer-size = <0x80000>;
+		android,ramoops-console-size = <0x40000>;
+		android,ramoops-pmsg-size = <0x20000>;
+		android,ramoops-record-size = <0x5000>;
+		android,ramoops-ftrace-size = <0x15000>;
+		android,ramoops-dump-oops = <0x1>;
+		linux,contiguous-region = <&ramoops_mem>;
 	};
 
 	intc: interrupt-controller@b000000 {
