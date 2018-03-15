@@ -47,6 +47,7 @@
 #include "msm8953-bardock-audio.dtsi"
 #include "msm8953-bardock-camera.dtsi"
 #include "msm8953-bardock-fingerprint.dtsi"
+#include "msm8953-bardock-fstab.dtsi"
 #include "msm8953-bardock-misc.dtsi"
 #include "msm8953-bardock-nfc.dtsi"
 #include "msm8953-bardock-panels.dtsi"
