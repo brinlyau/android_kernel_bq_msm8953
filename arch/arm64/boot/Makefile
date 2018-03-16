@@ -14,7 +14,9 @@
 # Based on the ia64 boot/Makefile.
 #
 
+ifneq ($(CONFIG_MACH_BQ),y)
 include $(srctree)/arch/arm64/boot/dts/qcom/Makefile
+endif
 
 targets := Image Image.gz
 
