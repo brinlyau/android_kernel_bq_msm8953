@@ -68,10 +68,10 @@
 #define CHIPS_INPUT_KEY_DOUBLECLICK 	  KEY_F20
 #define CHIPS_INPUT_KEY_LONGTOUCH     	  KEY_F21
 #define CHIPS_INPUT_KEY_UP                KEY_UP
-#define CHIPS_INPUT_KEY_DOWN              KEY_DOWN
-#define CHIPS_INPUT_KEY_LEFT              KEY_LEFT
-#define CHIPS_INPUT_KEY_RIGHT             KEY_RIGHT
-#define CHIPS_INPUT_KEY_POWER             KEY_POWER
+#define CHIPS_INPUT_KEY_DOWN              KEY_F18
+#define CHIPS_INPUT_KEY_LEFT              KEY_F18
+#define CHIPS_INPUT_KEY_RIGHT             KEY_F18
+#define CHIPS_INPUT_KEY_POWER             KEY_F18
 
 /******************************************
           Global variable definition

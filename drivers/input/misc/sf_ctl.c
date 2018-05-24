@@ -47,19 +47,14 @@
 #include <linux/spi/spi.h>
 #include <linux/spi/spidev.h>
 #include <linux/printk.h>
-#include <linux/proc_fs.h>
 
 #include "sf_ctl.h"
-
-#include <linux/fb.h>
-#include <linux/notifier.h>
 
 #define MODULE_NAME "sf_ctl"
 #define xprintk(level, fmt, args...) printk(level MODULE_NAME": "fmt, ##args)
 
 #define SF_VDD_MIN_UV 2800000
 #define SF_VDD_MAX_UV 2800000
-#define PROC_NAME  "fp_info"
 
 #define ANDROID_WAKELOCK	1
 
@@ -72,7 +67,7 @@
  * There is NO need to modify 'rXXXX_yyyymmdd', it should be updated automatically
  * by the building script (see the 'Driver-revision' section in 'build.sh').
  */
-#define SF_DRV_VERSION "v0.9.2-r1_201711018"
+#define SF_DRV_VERSION "v0.9.1-rXXXX_20161227"
 #define LONGQI_HAL_COMPATIBLE 1	//powerking add for longqi 2017.01.16
 
 struct sf_ctl_device {
@@ -81,12 +76,10 @@ struct sf_ctl_device {
     int irq_num;
     int pwr_num;
     struct regulator* vdd;
-    u8 isOpen;
-    u8 isInitialize;
+    u8 isPowerOn;
     struct work_struct work_queue;
     struct input_dev* input;
     struct wake_lock wakelock;
-    struct notifier_block notifier;
 };
 
 typedef enum {
@@ -113,7 +106,6 @@ static int sf_ctl_init_gpio_pins(void);
 static int sf_ctl_init_input(void);
 static int __init sf_ctl_driver_init(void);
 static void __exit sf_ctl_driver_exit(void);
-static struct proc_dir_entry *proc_entry=NULL;
 
 static struct file_operations sf_ctl_fops = {
     .owner          = THIS_MODULE,
@@ -149,7 +141,7 @@ static int sf_ctl_init_gpio(void)
     }
 
     if (gpio_is_valid(sf_ctl_dev.irq_num)) {
-        err = gpio_request(sf_ctl_dev.irq_num,"sf-irq");
+        err = pinctrl_request_gpio(sf_ctl_dev.irq_num);
 
         if (err) {
             xprintk(KERN_ERR, "Could not request irq gpio.\n");
@@ -166,7 +158,6 @@ static int sf_ctl_init_gpio(void)
     pinctrl_gpio_direction_input(sf_ctl_dev.irq_num);
 
     xprintk(KERN_DEBUG, "%s(..) ok! exit.\n", __FUNCTION__);
-    sf_ctl_dev.isInitialize = 1;
 
     return err;
 }
@@ -176,11 +167,10 @@ static int sf_ctl_free_gpio(void)
 {
     int err = 0;
     xprintk(KERN_DEBUG, "%s(..) enter.\n", __FUNCTION__);
-    sf_ctl_dev.isInitialize = 0;
 
     if (gpio_is_valid(sf_ctl_dev.irq_num)) {
+		pinctrl_free_gpio(sf_ctl_dev.irq_num);
         free_irq(gpio_to_irq(sf_ctl_dev.irq_num), (void*)&sf_ctl_dev);
-        gpio_free(sf_ctl_dev.irq_num);
     }
 
 	if (gpio_is_valid(sf_ctl_dev.reset_num)) {
@@ -254,16 +244,18 @@ static int sf_ctl_report_key_event(struct input_dev* input, sf_key_event_t* keve
 		case SF_KEY_F11:	key_code = KEY_F19;    break; //click
 		case SF_KEY_F12:	key_code = KEY_F20;    break; //double click
 		case SF_KEY_ENTER:	key_code = KEY_F21;    break; //long press
-		case SF_KEY_UP: 	key_code = KEY_UP;     break;
-		case SF_KEY_LEFT:	key_code = KEY_LEFT;   break;
-		case SF_KEY_RIGHT:	key_code = KEY_RIGHT;  break;
-		case SF_KEY_DOWN:	key_code = KEY_DOWN;   break;
+		case SF_KEY_UP: 	key_code = KEY_F18;    break;
+		case SF_KEY_LEFT:	key_code = KEY_F18;   break;
+		case SF_KEY_RIGHT:	key_code = KEY_F18;  break;
+		case SF_KEY_DOWN:	key_code = KEY_F18;   break;
 		case SF_KEY_WAKEUP: key_code = KEY_WAKEUP; break;
 
 		default: break;
     }
 
     xprintk(KERN_DEBUG, "%s(..) enter.\n", __FUNCTION__);
+    input_report_key(input, key_code, kevent->value);
+    input_sync(input);
     xprintk(KERN_DEBUG, "%s(..) leave.\n", __FUNCTION__);
     return err;
 }
@@ -295,59 +287,6 @@ static int sf_ctl_init_irq(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 extern void sf_spi_platform_free(void);
-static int proc_show_ver(struct seq_file *file,void *v)
-{
-	seq_printf(file,"[Vendor]sw9651,Sunwave\n");
-	return 0;
-}
-
-static int proc_open(struct inode *inode,struct file *file)
-{
-	printk("sw9651 proc_open\n");
-	single_open(file,proc_show_ver,NULL);
-	return 0;
-}
-
-static const struct file_operations proc_file_ops = {
-	.owner = THIS_MODULE,
-	.open = proc_open,
-	.read = seq_read,
-	.release = single_release,
-};
-
-static int sunwave_fb_notifier_callback(struct notifier_block *self,
-                                        unsigned long event, void *data)
-{
-    static char screen_status[64] = {'\0'};
-    char *screen_env[2] = { screen_status, NULL };
-    struct sf_ctl_device *sf_ctl_dev;
-    struct fb_event *evdata = data;
-    unsigned int blank;
-    int retval = 0;
-
-    if (event != FB_EVENT_BLANK /* FB_EARLY_EVENT_BLANK */) {
-        return 0;
-    }
-
-    sf_ctl_dev = container_of(self, struct sf_ctl_device, notifier);
-    blank = *(int *)evdata->data;
-
-    switch (blank) {
-        case FB_BLANK_UNBLANK:
-            sprintf(screen_status, "SCREEN_STATUS=%s", "ON");
-            kobject_uevent_env(&sf_ctl_dev->miscdev.this_device->kobj, KOBJ_CHANGE, screen_env);
-            break;
-
-        case FB_BLANK_POWERDOWN:
-            sprintf(screen_status, "SCREEN_STATUS=%s", "OFF");
-            kobject_uevent_env(&sf_ctl_dev->miscdev.this_device->kobj, KOBJ_CHANGE, screen_env);
-            break;
-
-        default:
-            break;
-    }
-    return retval;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // struct file_operations fields.
@@ -365,15 +304,12 @@ static long sf_ctl_ioctl(struct file* filp, unsigned int cmd, unsigned long arg)
         case SF_IOC_INIT_DRIVER: {
             xprintk(KERN_INFO, "SF_IOC_INIT_DRIVER.\n");
             sf_ctl_init_gpio();
-    sf_ctl_dev->notifier.notifier_call = sunwave_fb_notifier_callback;
-    fb_register_client(&sf_ctl_dev->notifier);
             break;
         }
 
         case SF_IOC_DEINIT_DRIVER: {
             xprintk(KERN_INFO, "SF_IOC_DEINIT_DRIVER.\n");
             sf_ctl_free_gpio();
-    fb_unregister_client(&sf_ctl_dev->notifier);
             break;
         }
 
@@ -395,19 +331,6 @@ static long sf_ctl_ioctl(struct file* filp, unsigned int cmd, unsigned long arg)
         case SF_IOC_REQUEST_IRQ: {
             xprintk(KERN_INFO, "SF_IOC_REQUEST_IRQ.\n");
 			sf_ctl_init_irq();
-	if (NULL == proc_entry)
-	{
-		proc_entry = proc_create(PROC_NAME, 0777, NULL, &proc_file_ops);
-		if (NULL == proc_entry)
-		{
-			printk("sw9651 Couldn't create proc entry!");
-			err = -ENOMEM;	
-		}
-		else
-		{
-			printk("sw9651 Create proc entry success!");
-		}
-	}
 
             break;
         }
@@ -469,18 +392,12 @@ static long sf_ctl_ioctl(struct file* filp, unsigned int cmd, unsigned long arg)
 static int sf_ctl_open(struct inode* inode, struct file* filp)
 {
     xprintk(KERN_DEBUG, "%s(..) enter.\n", __FUNCTION__);
-    sf_ctl_dev.isOpen++;
     return 0;
 }
 
 static int sf_ctl_release(struct inode* inode, struct file* filp)
 {
     xprintk(KERN_DEBUG, "%s(..) enter.\n", __FUNCTION__);
-    sf_ctl_dev.isOpen--;
-
-    if ((!sf_ctl_dev.isOpen) && (sf_ctl_dev.isInitialize == 1)) {
-        sf_ctl_free_gpio();
-    }
     return 0;
 }
 
@@ -557,8 +474,6 @@ static int sf_ctl_init_input(void)
 static int __init sf_ctl_driver_init(void)
 {
     int err = 0;
-    sf_ctl_dev.isInitialize = 0;
-    sf_ctl_dev.isOpen = 0;
     /* Initialize the GPIO pins. */
     err = sf_ctl_init_gpio_pins();
 
@@ -605,7 +520,7 @@ static void __exit sf_ctl_driver_exit(void)
     }
 
     if (sf_ctl_dev.irq_num >= 0) {
-		gpio_free(sf_ctl_dev.irq_num);
+		pinctrl_free_gpio(sf_ctl_dev.irq_num);
         free_irq(gpio_to_irq(sf_ctl_dev.irq_num), (void*)&sf_ctl_dev);
     }
 
@@ -617,7 +532,6 @@ static void __exit sf_ctl_driver_exit(void)
 #if ANDROID_WAKELOCK
     wake_lock_destroy(&sf_ctl_dev.wakelock);
 #endif
-			remove_proc_entry(PROC_NAME,NULL);
     xprintk(KERN_INFO, "sunwave fingerprint device control driver released.\n");
 }
 

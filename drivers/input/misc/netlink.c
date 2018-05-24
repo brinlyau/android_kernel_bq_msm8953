@@ -62,7 +62,7 @@ void nl_data_ready(struct sk_buff *__skb)
     {
 	nlh = nlmsg_hdr(skb);
 
-    	memcpy(str, NLMSG_DATA(nlh), sizeof(str));
+	memcpy(str, NLMSG_DATA(nlh), sizeof(str));
 	pid = nlh->nlmsg_pid;
 	pr_debug("Message pid %d received:%s\n",pid, str) ;
 	kfree_skb(skb);

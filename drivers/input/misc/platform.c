@@ -15,6 +15,7 @@
 
 #include <linux/platform_device.h>
 
+/*GPIO pins reference.*/
 int gf_parse_dts(struct gf_dev* gf_dev)
 {
     int rc = 0;
